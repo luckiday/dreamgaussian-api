@@ -35,3 +35,9 @@ rembg[gpu,cli]
 
 # gradio demo
 gradio
+
+# for API
+celery
+flask
+requests
+redis
