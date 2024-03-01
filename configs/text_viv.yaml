@@ -1,3 +1,5 @@
+# Customized config based on text_mv.yaml
+
 ### Input
 # input rgba image path (default to None, can be load in GUI too)
 input: 
@@ -14,8 +16,8 @@ ref_size: 256
 density_thresh: 1
 
 ### Output
-outdir: logs_mv
-mesh_format: obj
+outdir: logs_viv
+mesh_format: glb
 save_path: ???
 
 ### Training

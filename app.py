@@ -31,6 +31,7 @@ def generate_3d_object_task(self, prompt, save_path, model="DG"):
     :param model: select the model to use for generation. The model can be
     "DG" for DreamGaussian
     "MV" for MVDream
+    "VIV" for customized configuration
     :return:
     """
     command_echo = f"echo 'Generating 3D object for prompt: {prompt}'"
@@ -43,6 +44,9 @@ def generate_3d_object_task(self, prompt, save_path, model="DG"):
     elif model == "MV":
         command_stage1 = f"python main.py --config configs/text_mv.yaml prompt={escaped_prompt} save_path={escaped_save_path}"
         command_stage2 = f"python main2.py --config configs/text_mv.yaml prompt={escaped_prompt} save_path={escaped_save_path}"
+    elif model == "VIV":
+        command_stage1 = f"python main.py --config configs/text_viv.yaml prompt={escaped_prompt} save_path={escaped_save_path}"
+        command_stage2 = f"python main2.py --config configs/text_viv.yaml prompt={escaped_prompt} save_path={escaped_save_path}"
     else:
         return {"error": "Invalid model", "details": f"Model {model} is not supported"}
     print("Executing subprocess")
@@ -52,11 +56,10 @@ def generate_3d_object_task(self, prompt, save_path, model="DG"):
         subprocess.run(command_echo, check=True, shell=True, executable='/bin/bash')
         subprocess.run(command_stage1, check=True, shell=True, executable='/bin/bash')
         subprocess.run(command_stage2, check=True, shell=True, executable='/bin/bash')
-
-        object_path = f'log/{save_path}'
+        object_path = f'logs_{model.lower()}/{save_path}'
         print(f"Subprocess executed successfully. Object path: {object_path}")
-
         return {"message": "3D object generated successfully", "object_path": object_path}
+
     except subprocess.CalledProcessError as e:
         self.update_state(state='FAILURE', meta={'exc': str(e)})
         return {"error": "Failed to generate 3D object", "details": str(e)}
