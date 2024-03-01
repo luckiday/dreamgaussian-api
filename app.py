@@ -133,25 +133,29 @@ Accessing the created 3D objects
 @app.route('/')
 def index():
     try:
-        # List all files in the LOG_DIR
-        files = os.listdir(LOG_DIR)
-        # Get full paths along with their creation times
-        files_with_paths = [(file, os.path.getctime(os.path.join(LOG_DIR, file))) for file in files]
-        # Sort files by creation time, newest first
-        files_sorted = sorted(files_with_paths, key=lambda x: x[1], reverse=True)
-        # Generate HTML content with links to the files and their creation dates in a table
-        file_rows = [
-            f'<tr><td><a href="/logs/{file}">{file}</a></td><td>{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(creation_time))}</td></tr>'
-            for file, creation_time in files_sorted
-        ]
-        file_table_html = f'<table><tr><th>File Name</th><th>Creation Date</th></tr>{" ".join(file_rows)}</table>'
+        file_table_html = ""
+        log_dirs = [f for f in os.listdir() if f.startswith('logs')]
+        for log_dir in log_dirs:
+            file_table_html += f"<h2>{log_dir}</h2>"
+            # List all files in the LOG_DIR
+            files = os.listdir(log_dir)
+            # Get full paths along with their creation times
+            files_with_paths = [(file, os.path.getctime(os.path.join(log_dir, file))) for file in files]
+            # Sort files by creation time, newest first
+            files_sorted = sorted(files_with_paths, key=lambda x: x[1], reverse=True)
+            # Generate HTML content with links to the files and their creation dates in a table
+            file_rows = [
+                f'<tr><td><a href="/logs/{file}">{file}</a></td><td>{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(creation_time))}</td></tr>'
+                for file, creation_time in files_sorted
+            ]
+            file_table_html += f'<table><tr><th>File Name</th><th>Creation Date</th></tr>{" ".join(file_rows)}</table>'
         return render_template_string(f"""<h1>Log Files</h1>{file_table_html}""")
     except Exception as e:
         return str(e), 500
 
 
-# Assuming the 'logs' directory is in the same directory as this script
-LOG_DIR = os.path.join(os.path.dirname(__file__), 'logs')
+# # Assuming the 'logs' directory is in the same directory as this script
+# LOG_DIR = os.path.join(os.path.dirname(__file__), 'logs')
 
 
 @app.route('/logs/<filename>')
