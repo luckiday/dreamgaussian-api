@@ -145,7 +145,8 @@ def index():
             files_sorted = sorted(files_with_paths, key=lambda x: x[1], reverse=True)
             # Generate HTML content with links to the files and their creation dates in a table
             file_rows = [
-                f'<tr><td><a href="/logs/{file}">{file}</a></td><td>{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(creation_time))}</td></tr>'
+                (f'<tr><td><a href="/{log_dir}/{file}">{file}</a></td><td>'
+                 f'{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(creation_time))}</td></tr>')
                 for file, creation_time in files_sorted
             ]
             file_table_html += f'<table><tr><th>File Name</th><th>Creation Date</th></tr>{" ".join(file_rows)}</table>'
@@ -154,22 +155,34 @@ def index():
         return str(e), 500
 
 
-# # Assuming the 'logs' directory is in the same directory as this script
-# LOG_DIR = os.path.join(os.path.dirname(__file__), 'logs')
-
-
 @app.route('/logs/<filename>')
 def serve_log_file(filename):
     # Ensure the filename is safe to use
+    log_dir = os.path.join(os.path.dirname(__file__), 'logs')
     try:
         # This prevents accessing directories outside the LOG_DIR
-        safe_path = safe_join(LOG_DIR, filename)
+        safe_path = safe_join(log_dir, filename)
     except ValueError:
         # If the path is not safe, return a 404 not found response
         abort(404)
 
     # Send the file from the safe path
-    return send_from_directory(LOG_DIR, filename)
+    return send_from_directory(log_dir, filename)
+
+
+@app.route('/logs_viv/<filename>')
+def serve_log_file(filename):
+    # Ensure the filename is safe to use
+    log_dir = os.path.join(os.path.dirname(__file__), 'logs_viv')
+    try:
+        # This prevents accessing directories outside the log_dir
+        safe_path = safe_join(log_dir, filename)
+    except ValueError:
+        # If the path is not safe, return a 404 not found response
+        abort(404)
+
+    # Send the file from the safe path
+    return send_from_directory(log_dir, filename)
 
 
 if __name__ == '__main__':
