@@ -171,7 +171,7 @@ def serve_log_file(filename):
 
 
 @app.route('/logs_viv/<filename>')
-def serve_log_file(filename):
+def serve_log_file_2(filename):
     # Ensure the filename is safe to use
     log_dir = os.path.join(os.path.dirname(__file__), 'logs_viv')
     try:
