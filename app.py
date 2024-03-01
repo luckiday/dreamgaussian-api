@@ -171,9 +171,39 @@ def serve_log_file(filename):
 
 
 @app.route('/logs_viv/<filename>')
-def serve_log_file_2(filename):
+def serve_log_file_viv(filename):
     # Ensure the filename is safe to use
     log_dir = os.path.join(os.path.dirname(__file__), 'logs_viv')
+    try:
+        # This prevents accessing directories outside the log_dir
+        safe_path = safe_join(log_dir, filename)
+    except ValueError:
+        # If the path is not safe, return a 404 not found response
+        abort(404)
+
+    # Send the file from the safe path
+    return send_from_directory(log_dir, filename)
+
+
+@app.route('/logs_dg/<filename>')
+def serve_log_file_dg(filename):
+    # Ensure the filename is safe to use
+    log_dir = os.path.join(os.path.dirname(__file__), 'logs_dg')
+    try:
+        # This prevents accessing directories outside the log_dir
+        safe_path = safe_join(log_dir, filename)
+    except ValueError:
+        # If the path is not safe, return a 404 not found response
+        abort(404)
+
+    # Send the file from the safe path
+    return send_from_directory(log_dir, filename)
+
+
+@app.route('/logs_mv/<filename>')
+def serve_log_file_mv(filename):
+    # Ensure the filename is safe to use
+    log_dir = os.path.join(os.path.dirname(__file__), 'logs_mv')
     try:
         # This prevents accessing directories outside the log_dir
         safe_path = safe_join(log_dir, filename)
