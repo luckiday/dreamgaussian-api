@@ -1,4 +1,5 @@
 import os
+import shlex
 import subprocess
 import time
 
@@ -6,7 +7,6 @@ from celery import Celery
 from flask import Flask, request, jsonify, send_from_directory, abort, render_template_string
 from flask_cors import CORS
 from werkzeug.security import safe_join
-import shlex
 
 app = Flask(__name__)
 # Configure Celery to use Redis as the message broker
@@ -22,15 +22,29 @@ cors = CORS(app, resources={r"/logs/*": {"origins": "*"}})
 
 
 @celery.task(bind=True)
-def generate_3d_object_task(self, prompt, save_path):
+def generate_3d_object_task(self, prompt, save_path, model="DG"):
+    """
+    Generate a 3D object based on the prompt and save it to the specified path.
+    :param self:
+    :param prompt:
+    :param save_path:
+    :param model: select the model to use for generation. The model can be
+    "DG" for DreamGaussian
+    "MV" for MVDream
+    :return:
+    """
     command_echo = f"echo 'Generating 3D object for prompt: {prompt}'"
 
     escaped_prompt = shlex.quote(prompt)
     escaped_save_path = shlex.quote(save_path)
-
-    command_stage1 = f"python main.py --config configs/text.yaml prompt={escaped_prompt} save_path={escaped_save_path}"
-    command_stage2 = f"python main2.py --config configs/text.yaml prompt={escaped_prompt} save_path={escaped_save_path}"
-
+    if model == "DG":
+        command_stage1 = f"python main.py --config configs/text.yaml prompt={escaped_prompt} save_path={escaped_save_path}"
+        command_stage2 = f"python main2.py --config configs/text.yaml prompt={escaped_prompt} save_path={escaped_save_path}"
+    elif model == "MV":
+        command_stage1 = f"python main.py --config configs/text_mv.yaml prompt={escaped_prompt} save_path={escaped_save_path}"
+        command_stage2 = f"python main2.py --config configs/text_mv.yaml prompt={escaped_prompt} save_path={escaped_save_path}"
+    else:
+        return {"error": "Invalid model", "details": f"Model {model} is not supported"}
     print("Executing subprocess")
 
     try:
@@ -61,16 +75,30 @@ def generate_3d_object():
     print("Request received")
     data = request.json
     prompt = data.get('prompt')
+    model = data.get('model', 'DG')
     save_path = data.get('save_path', 'default_path')
+    save_path = save_path + "_" + model
+
     if not prompt:
         return jsonify({"error": "Prompt is required"}), 400
+
+    # check if the save_path exists in folder logs/{save_path}.obj
+    if os.path.exists(f'logs/{save_path}.obj'):
+        return jsonify({"message": "3D object already exists",
+                        "object_path": f'logs/{save_path}.obj',
+                        "task_id": "0000"}), 200
+
     print("Starting task")
-    task = generate_3d_object_task.apply_async(args=[prompt, save_path])
+    task = generate_3d_object_task.apply_async(args=[prompt, save_path, model])
     return jsonify({"task_id": task.id}), 202
 
 
 @app.route('/task-status/<task_id>', methods=['GET'])
 def task_status(task_id):
+    if task_id == "0000":
+        return jsonify({"message": "3D object already exists",
+                        "task_id": "0000"}), 200
+
     task = generate_3d_object_task.AsyncResult(task_id)
     print("Task info:", task.info)
 
