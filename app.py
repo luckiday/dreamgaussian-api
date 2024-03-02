@@ -80,15 +80,18 @@ def generate_3d_object():
     prompt = data.get('prompt')
     model = data.get('model', 'DG')
     save_path = data.get('save_path', 'default_path')
-    save_path = save_path + "_" + model
 
     if not prompt:
         return jsonify({"error": "Prompt is required"}), 400
-
+    output_path = f'logs_{model.lower()}/{save_path}'
     # check if the save_path exists in folder logs/{save_path}.obj
-    if os.path.exists(f'logs/{save_path}.obj'):
+    if os.path.exists(f'{output_path}.obj'):
         return jsonify({"message": "3D object already exists",
                         "object_path": f'logs/{save_path}.obj',
+                        "task_id": "0000"}), 200
+    if os.path.exists(f'{output_path}.glb'):
+        return jsonify({"message": "3D object already exists",
+                        "object_path": f'logs/{save_path}.glb',
                         "task_id": "0000"}), 200
 
     print("Starting task")
